@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>strata</Name>
+  <Repository>ghcr.io/williamkunz/strata:v0.1.21</Repository>
+  <Registry>https://github.com/williamkunz/strata-docker/pkgs/container/strata</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/HinataSoft/strata-docker/issues</Support>
+  <Project>https://github.com/Niko1221/Strata</Project>
+  <Overview>Strata runs Qwen3.8-Flash-Next on one NVIDIA GPU plus system RAM and serves an OpenAI- and Anthropic-compatible API, a chat page and a live monitor.[br][br]
+[b]Requirements:[/b] the Nvidia Driver plugin on driver 580 or newer, an RTX 30/40/50 card (compute capability 8.0+), 48-62 GB of free RAM depending on the model, and about 92 GB of disk on an SSD pool.[br][br]
+[b]First run (once):[/b] set [i]Post Arguments[/i] to [b]init[/b] under Advanced View, then start the container and watch the log. It downloads about 92 GB and builds the pack and the MTP layer, which takes a few hours. Resumable: if it stops, start it again. When the log says "Init done", clear Post Arguments and start the container again to run the server.[br][br]
+[b]No API key by default:[/b] anyone who can reach the port can use the model. Set STRATA_API_KEY and run init again (no re-download) to require one.</Overview>
+  <Category>Tools: Other:</Category>
+  <WebUI>http://[IP]:[PORT:8080]/</WebUI>
+  <TemplateURL/>
+  <Icon/>
+  <ExtraParams>--runtime=nvidia --ulimit memlock=-1 --ulimit nofile=65536 --stop-timeout 30</ExtraParams>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled/>
+  <DonateText/>
+  <DonateLink/>
+  <Requires>Nvidia Driver plugin (driver 580 or newer). Do not pin CPUs: the engine sets its own thread affinity and breaks inside a cpuset.</Requires>
+
+  <Config Name="WebUI / API port" Target="8080" Default="8080" Mode="tcp" Description="Chat page, monitor and the /v1 API. No API key is set by default, so keep this LAN-only." Type="Port" Display="always" Required="true" Mask="false">8080</Config>
+
+  <Config Name="Model data" Target="/data" Default="/mnt/cache/strata/data" Mode="rw" Description="About 92 GB for IQ3_S. Use a direct pool path (/mnt/cache/... or /mnt/POOLNAME/...), not /mnt/user: the engine reads experts from the GGUF while it runs. Needs rw for init; it can be set to ro afterwards." Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/strata/data</Config>
+
+  <Config Name="Config" Target="/config" Default="/mnt/user/appdata/strata" Mode="rw" Description="Run config, calibration and the engine log (strata-TAG.log). Look here first when the server will not start." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/strata</Config>
+
+  <Config Name="GPU" Target="NVIDIA_VISIBLE_DEVICES" Default="" Mode="" Description="Your card's UUID (GPU-xxxxxxxx-...) from the Nvidia Driver plugin page or nvidia-smi -L. Pin exactly one card." Type="Variable" Display="always" Required="true" Mask="false"></Config>
+
+  <Config Name="Model" Target="STRATA_MODEL" Default="IQ3_S|IQ3_XXS|IQ2_XS|Q2_0" Mode="" Description="IQ3_S: 84 GB download, needs 62 GB RAM. IQ3_XXS: 60 GB RAM. IQ2_XS and Q2_0: 48 GB RAM. Changing it needs init again." Type="Variable" Display="always" Required="true" Mask="false">IQ3_S</Config>
+
+  <Config Name="Model family" Target="STRATA_FAMILY" Default="qwen|swift|coder" Mode="" Description="qwen; swift (thinks shorter); coder (half the experts, about 32 GB RAM). Changing it needs init again." Type="Variable" Display="always" Required="true" Mask="false">qwen</Config>
+
+  <Config Name="Context length" Target="STRATA_CONTEXT" Default="262144|131072|65536|32768|8192" Mode="" Description="262144 needs more than 90 GB of RAM with IQ3_S, otherwise setup caps it at 131072. Changing it needs init again." Type="Variable" Display="always" Required="true" Mask="false">262144</Config>
+
+  <Config Name="Vision" Target="STRATA_VISION" Default="gpu|cpu|none" Mode="" Description="Image input. gpu downloads a 0.9 GB encoder. Changing it needs init again." Type="Variable" Display="always" Required="true" Mask="false">gpu</Config>
+
+  <Config Name="API key" Target="STRATA_API_KEY" Default="" Mode="" Description="Empty = no key. When set, /v1/* requires it as Authorization: Bearer or x-api-key. Run init once after setting it the first time; to remove it, clear this AND run init again." Type="Variable" Display="always" Required="false" Mask="true"></Config>
+
+  <Config Name="KV cache type" Target="STRATA_KV" Default="int8|q4_0" Mode="" Description="int8, or q4_0 for half the KV memory and slightly less precision. Changing it needs init again." Type="Variable" Display="advanced" Required="true" Mask="false">int8</Config>
+
+  <Config Name="Prompt cache checkpoints" Target="STRATA_PROMPT_CACHE" Default="24" Mode="" Description="Checkpoints kept between requests, about 118 MB of RAM each. Changing it needs init again." Type="Variable" Display="advanced" Required="true" Mask="false">24</Config>
+
+  <Config Name="Prompt cache interval" Target="STRATA_PROMPT_CACHE_EVERY" Default="8192" Mode="" Description="Also checkpoint every N freshly read prompt tokens. Changing it needs init again." Type="Variable" Display="advanced" Required="true" Mask="false">8192</Config>
+
+  <Config Name="NVIDIA driver capabilities" Target="NVIDIA_DRIVER_CAPABILITIES" Default="compute,utility" Mode="" Description="Must include utility: the entrypoint and setup refuse to run without nvidia-smi." Type="Variable" Display="advanced-hide" Required="true" Mask="false">compute,utility</Config>
+</Container>
