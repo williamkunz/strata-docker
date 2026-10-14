@@ -21,13 +21,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Template matches the pinned Strata version
+      # a broken template or profile would reach Community Applications from main before anyone notices
+      - name: Template and profile are valid
         run: |
-          tag=$(tr -d '[:space:]' < build/STRATA_VERSION)
-          grep -q "<Repository>ghcr.io/williamkunz/strata:${tag}</Repository>" strata.xml || {
-            echo "::error file=strata.xml::<Repository> must be ghcr.io/williamkunz/strata:${tag} to match build/STRATA_VERSION"
-            exit 1
-          }
+          python3 - <<'EOF'
+          import xml.etree.ElementTree as ET
+          for f in ("templates/strata.xml", "ca_profile.xml"):
+              ET.parse(f)
+          repo = ET.parse("templates/strata.xml").findtext("Repository")
+          if repo != "ghcr.io/williamkunz/strata:latest":
+              raise SystemExit(f"::error file=templates/strata.xml::<Repository> is {repo}, expected the image this workflow pushes")
+          EOF
 
       # the CUDA devel base image plus the build need more than the runner's ~14 GB free
       - name: Free disk space
