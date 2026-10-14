@@ -1,11 +1,8 @@
-# Builds the image from the Strata tag in build/STRATA_VERSION.
-#   pull request to main   build only: proves the tag + patch still build, pushes nothing
-#   merge (push) to main   build and push ghcr.io/williamkunz/strata:<tag> and :latest
+# Builds the image from the Strata tag in build/STRATA_VERSION on every push (merge) to main, and
+# pushes ghcr.io/williamkunz/strata:<tag> and :latest.
 name: Build image
 
 on:
-  pull_request:
-    branches: [main]
   push:
     branches: [main]
 
