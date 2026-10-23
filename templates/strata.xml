@@ -1,58 +1,62 @@
 <?xml version="1.0"?>
 <Container version="2">
   <Name>Strata</Name>
-  <!-- Built from Strata's own Dockerfile (Niko1221/Strata), patched to PORTABLE=ON so it runs on any AVX2 CPU. -->
-  <Repository>ghcr.io/williamkunz/strata:latest</Repository>
-  <Registry>https://github.com/williamkunz/strata-docker/pkgs/container/strata</Registry>
+  <!-- Strata's official image (published from 0.2.1 on). cuda13: RTX 20-50 on driver 580+; cuda12 for GTX 10 / P100 / V100 or drivers 575-579. -->
+  <Repository>ghcr.io/niko1221/strata:latest-cuda13</Repository>
+  <Registry>https://github.com/Niko1221/Strata/pkgs/container/strata</Registry>
   <Network>bridge</Network>
   <Shell>bash</Shell>
   <Privileged>false</Privileged>
   <Support>https://github.com/williamkunz/strata-docker/issues</Support>
   <Project>https://github.com/Niko1221/Strata</Project>
   <ReadMe>https://raw.githubusercontent.com/williamkunz/strata-docker/main/README.md</ReadMe>
-  <Overview>Strata runs the Qwen3.8-Flash-Next mixture-of-experts model on one NVIDIA GPU plus system RAM, and serves an OpenAI- and Anthropic-compatible API, a chat page and a live monitor.
+  <Overview>Strata runs the Qwen3.8-Flash-Next mixture-of-experts model on an NVIDIA GPU plus system RAM, and serves an OpenAI- and Anthropic-compatible API, a chat page and a live monitor. This template runs Strata's official image.
 
-Requirements: the Nvidia Driver plugin on driver 580 or newer; an RTX 20/30/40/50 card with 12 GB of VRAM or more; an AVX2 CPU; 48-62 GB of free RAM depending on the model; 70-90 GB of disk on an SSD pool.
+Requirements: the Nvidia Driver plugin on driver 580 or newer and an RTX 20/30/40/50 card. For a GTX 10, P100 or V100, or a driver from 575 to 579, change the Repository tag to latest-cuda12. You also need 32 GB of RAM or more (more RAM allows a larger, better model) and room for the model on an SSD pool.
 
-First start: downloads the model (about 70 GB for IQ2_XS) and sets it up, which can take a few hours. Watch the log; it resumes if it stops. Later starts go straight to serving, and loading the model into RAM takes 1-3 minutes.
+First start: downloads the model into the Data folder and prepares it, which takes a while; watch the log. A stopped download resumes where it left off. Later starts go straight to serving.
 
-Changing settings later: switching Model or Model family needs nothing extra. Changing context, vision, KV cache, API key or low-RAM mode for a model already set up needs Reinstall = 1 for one start (nothing is downloaded again), then set it back to 0.
+API key: always on. Leave it empty and the first start makes one and keeps it in the Data folder; show it with: docker exec Strata strata launch --show-key --preset docker. Clients send it as Authorization: Bearer KEY.
 
-No API key by default: anyone who can reach the port can use the model. Keep it LAN-only, or set an API key.
+Changing settings: edit them and Apply. The new values replace the saved ones on the next start; the model files and tuning stay in the Data folder.
 
-This is an unofficial image built from Strata's own Dockerfile. Report template or image problems at the Support link, not to the Strata project.</Overview>
+Template and Unraid problems: the Support link. Strata itself: the Project link.</Overview>
   <Category>AI:</Category>
   <ExtraSearchTerms>llm qwen local ai openai anthropic api inference chat nvidia cuda gpu</ExtraSearchTerms>
   <WebUI>http://[IP]:[PORT:8080]/</WebUI>
   <TemplateURL>https://raw.githubusercontent.com/williamkunz/strata-docker/main/templates/strata.xml</TemplateURL>
   <Icon>https://raw.githubusercontent.com/williamkunz/strata-docker/main/icon.png</Icon>
   <License>MIT</License>
-  <!-- memlock: the engine pins tens of GB of experts; without it the pinning fails silently and every GPU copy crawls.
-       stop-timeout: releasing that pinned RAM takes longer than Docker's default 10 s, which would kill it (exit 137). -->
-  <ExtraParams>--runtime=nvidia --ulimit memlock=-1 --stop-timeout 60</ExtraParams>
-  <Requires>**Nvidia Driver plugin** on driver 580 or newer. Do not pin CPUs: the engine sets its own thread affinity and breaks inside a cpuset. Do not set a memory limit unless Low-RAM mode is on.</Requires>
+  <!-- From Strata's docs/DOCKER.md: memlock lets the engine pin the RAM it uses for the model, shm-size gives it shared
+       memory, and stop-timeout gives the model two minutes to unload (Docker's default 10 s kills it, exit 137). -->
+  <ExtraParams>--runtime=nvidia --ulimit memlock=-1:-1 --shm-size=2g --stop-timeout 120</ExtraParams>
+  <Requires>**Nvidia Driver plugin** on driver 580 or newer (575+ with the cuda12 tag). Do not set a memory limit on the container: Strata plans from the server's whole RAM. Do not pin CPUs: the engine sets its own thread affinity.</Requires>
 
-  <Config Name="WebUI / API port" Target="8080" Default="8080" Mode="tcp" Description="Chat page, monitor and the /v1 API. No API key is set by default, so keep this LAN-only." Type="Port" Display="always" Required="true" Mask="false">8080</Config>
+  <Config Name="WebUI / API port" Target="8080" Default="8080" Mode="tcp" Description="Chat page, monitor and the API (/v1 for OpenAI clients, the root URL for Anthropic clients)." Type="Port" Display="always" Required="true" Mask="false">8080</Config>
 
-  <Config Name="Data" Target="/data" Default="/mnt/cache/appdata/strata" Mode="rw" Description="The model, the prepared pack, the MTP layer and the install config: 70-90 GB depending on the model. Use a direct pool path (/mnt/cache/... or /mnt/POOLNAME/...), not /mnt/user: the engine reads experts from these files while it runs." Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/appdata/strata</Config>
+  <Config Name="Data" Target="/data" Default="/mnt/cache/appdata/strata" Mode="rw" Description="The model, the prepared pack, presets, tuning and the API key: tens of GB, the log names the size. Use a direct pool path (/mnt/cache/... or /mnt/POOLNAME/...), not /mnt/user: the engine reads the model files while it runs." Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/appdata/strata</Config>
 
-  <Config Name="GPU" Target="NVIDIA_VISIBLE_DEVICES" Default="" Mode="" Description="Your card's UUID (GPU-xxxxxxxx-...) from the Nvidia Driver plugin page or nvidia-smi -L. Name one card; 'all' on a two-card server makes setup split the model across both." Type="Variable" Display="always" Required="true" Mask="false"></Config>
+  <Config Name="GPU" Target="NVIDIA_VISIBLE_DEVICES" Default="all" Mode="" Description="The cards the container sees: a UUID (GPU-xxxxxxxx-...) from the Nvidia Driver plugin page or nvidia-smi -L, several separated by commas, or all." Type="Variable" Display="always" Required="true" Mask="false">all</Config>
 
-  <Config Name="Model" Target="MODEL" Default="IQ2_XS|Q2_0|IQ3_XXS|IQ3_S|IQ1_M|UD-Q4_K_XL" Mode="" Description="IQ2_XS (recommended): 68 GB download, 48 GB RAM. Q2_0: fastest, 48 GB RAM (qwen only). IQ3_XXS: better, 60 GB RAM. IQ3_S: best quality, 62 GB RAM. IQ1_M: coder family only, 32 GB RAM. UD-Q4_K_XL: unsloth family only." Type="Variable" Display="always" Required="true" Mask="false">IQ2_XS</Config>
+  <Config Name="Model" Target="MODEL" Default="" Mode="" Description="Empty: Strata picks the model it recommends for this server and says so in the log. Or a size such as IQ2_XS, IQ3_XXS, IQ3_S or Q2_0; see docs/MODELS.md in the Strata repository for what each needs." Type="Variable" Display="always" Required="false" Mask="false"></Config>
 
-  <Config Name="Model family" Target="FAMILY" Default="qwen|swift|coder|unsloth|nvfp4" Mode="" Description="qwen (default); swift (thinks shorter); coder (for code, fewer experts); unsloth and nvfp4 need their own models (see Model)." Type="Variable" Display="always" Required="true" Mask="false">qwen</Config>
+  <Config Name="Model family" Target="FAMILY" Default="" Mode="" Description="Empty for the usual one. qwen, swift (thinks shorter) or coder, when the size exists in several families." Type="Variable" Display="always" Required="false" Mask="false"></Config>
 
-  <Config Name="Context length" Target="CONTEXT" Default="32768|8192|65536|131072|204800|262144|393216|524288" Mode="" Description="Tokens per conversation. Longer costs RAM; setup caps it if the RAM is short. Changing it for a model already set up needs Reinstall = 1." Type="Variable" Display="always" Required="true" Mask="false">32768</Config>
+  <Config Name="Context length" Target="CONTEXT" Default="32k|64k|128k|256k" Mode="" Description="How much text it remembers at once. Longer costs RAM." Type="Variable" Display="always" Required="true" Mask="false">32k</Config>
 
-  <Config Name="Vision" Target="VISION" Default="no|yes|cpu" Mode="" Description="Image input: yes runs the image encoder on the GPU, cpu runs it on the CPU. Changing it for a model already set up needs Reinstall = 1." Type="Variable" Display="always" Required="true" Mask="false">no</Config>
+  <Config Name="Vision" Target="VISION" Default="off|on|gpu|cpu" Mode="" Description="on: the model reads pictures (about 0.9 GB more to download). gpu or cpu choose where the picture reader runs." Type="Variable" Display="always" Required="true" Mask="false">off</Config>
 
-  <Config Name="API key" Target="API_KEY" Default="" Mode="" Description="Empty = no key. When set, /v1/* requires it as Authorization: Bearer or x-api-key; /health and the chat page stay open. Setting or changing it for a model already set up needs Reinstall = 1." Type="Variable" Display="always" Required="false" Mask="true"></Config>
+  <Config Name="API key" Target="API_KEY" Default="" Mode="" Description="16 characters or more (openssl rand -hex 24 makes one). Empty: the first start makes one and keeps it in the Data folder." Type="Variable" Display="always" Required="false" Mask="true"></Config>
 
-  <Config Name="Reinstall" Target="REINSTALL" Default="0|1" Mode="" Description="1 = run setup again on the next start to apply changed context, vision, KV cache, API key or low-RAM settings. Nothing is downloaded again. Set it back to 0 afterwards." Type="Variable" Display="always" Required="true" Mask="false">0</Config>
+  <Config Name="Tuning" Target="TUNE" Default="skip|quick|thorough" Mode="" Description="Measures the best engine settings for this server, once, and keeps them. quick takes up to about 20 minutes on the first start, thorough up to about 2 hours." Type="Variable" Display="advanced" Required="true" Mask="false">skip</Config>
 
-  <Config Name="KV cache type" Target="KV" Default="int8|q4_0|k8v4" Mode="" Description="int8 (default); q4_0 halves the KV memory, slightly less precise; k8v4 keeps its KV in VRAM from 64K context up. Needs Reinstall = 1 to change." Type="Variable" Display="advanced" Required="true" Mask="false">int8</Config>
+  <Config Name="Tune again" Target="RETUNE" Default="0|1" Mode="" Description="1 tunes again on the next start even if this preset is already tuned, for example after an update. Set it back to 0 afterwards." Type="Variable" Display="advanced" Required="true" Mask="false">0</Config>
 
-  <Config Name="Low-RAM mode" Target="LOW_RAM" Default="auto|on|off" Mode="" Description="on maps the experts from the pack on disk instead of keeping them in RAM. Required if you give the container a memory limit: setup sees the server's total RAM, not the limit. Needs Reinstall = 1 to change." Type="Variable" Display="advanced" Required="true" Mask="false">auto</Config>
+  <Config Name="Parallel requests" Target="PARALLEL" Default="" Mode="" Description="Requests answered at the same time, 1 to 8. Empty: fitted to the card." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
 
-  <Config Name="NVIDIA driver capabilities" Target="NVIDIA_DRIVER_CAPABILITIES" Default="compute,utility" Mode="" Description="Must include utility: setup needs nvidia-smi." Type="Variable" Display="advanced-hide" Required="true" Mask="false">compute,utility</Config>
+  <Config Name="KV cache type" Target="KV" Default="int8|q4_0|k8v4|fp16" Mode="" Description="Conversation memory format: int8 (default), q4_0 (half the memory), k8v4, fp16." Type="Variable" Display="advanced" Required="true" Mask="false">int8</Config>
+
+  <Config Name="Existing model files" Target="MODEL_PATH" Default="" Mode="" Description="GGUF files you already have, as a path inside the container. Add a Path mapping for their folder (read-only is fine), e.g. /models, and enter that here; set Model too. Nothing is downloaded for the model itself." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+
+  <Config Name="Engine settings" Target="STRATA_SET" Default="" Mode="" Description="Advanced engine settings, space separated, like strata launch --set." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
 </Container>

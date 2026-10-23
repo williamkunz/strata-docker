@@ -1,27 +1,29 @@
 # Strata for Unraid
 
-An Unraid Community Applications template and container image for [Strata](https://github.com/Niko1221/Strata), which runs the Qwen3.8-Flash-Next mixture-of-experts model on one NVIDIA GPU plus system RAM. It serves an OpenAI- and Anthropic-compatible API, a chat page and a live monitor.
+An Unraid Community Applications template for [Strata](https://github.com/Niko1221/Strata), which runs the Qwen3.8-Flash-Next mixture-of-experts model on an NVIDIA GPU plus system RAM. It serves an OpenAI- and Anthropic-compatible API, a chat page and a live monitor.
 
-This is an **unofficial** image. Report template or image problems in this repository's [issues](https://github.com/williamkunz/strata-docker/issues), not to the Strata project.
+The template runs Strata's official image, `ghcr.io/niko1221/strata:latest-cuda13`. Report template or Unraid problems in this repository's [issues](https://github.com/williamkunz/strata-docker/issues), and problems with Strata itself to the [Strata project](https://github.com/Niko1221/Strata/issues).
 
 ## Install
 
 Search for **Strata** in the Apps tab. Before installing you need:
 
-- the **Nvidia Driver plugin** on driver 580 or newer
-- an NVIDIA RTX 20/30/40/50 card with 12 GB of VRAM or more
-- an x86-64 CPU with AVX2
-- 48-62 GB of free RAM, depending on the model
-- 70-90 GB of disk on an SSD pool, mapped as a direct pool path (`/mnt/cache/...`), not `/mnt/user`
+- the **Nvidia Driver plugin** on driver 580 or newer, and an RTX 20/30/40/50 card. For a GTX 10, P100 or V100, or a driver from 575 to 579, change the Repository tag to `latest-cuda12`.
+- 32 GB of RAM or more; more RAM allows a larger, better model ([Strata's model guide](https://github.com/Niko1221/Strata/blob/main/docs/MODELS.md))
+- room for the model on an SSD pool, mapped as a direct pool path (`/mnt/cache/...`), not `/mnt/user`
 
-The first start downloads the model and sets it up, which can take a few hours. Later starts go straight to serving. The template's Overview explains each setting.
+The first start downloads the model and prepares it. Later starts go straight to serving. The template's Overview explains each setting, and Strata's [Docker guide](https://github.com/Niko1221/Strata/blob/main/docs/DOCKER.md) covers them in full.
 
-The server has **no API key by default**: anyone who can reach the port can use the model. Keep it on your LAN, or set the API key.
+An API key is always on. If you leave it empty, the first start makes one; show it with:
 
-## Updating to a new Strata release
+```bash
+docker exec Strata strata launch --show-key --preset docker
+```
 
-Change the tag in `build/STRATA_VERSION` and merge it to `main`. If the patch no longer applies, upstream changed its build step: redo the edit in the new Dockerfile and regenerate the patch with `git diff`.
+## Updates
+
+The template follows `latest-cuda13`, which Strata's maintainer moves to each new release when its image is published. Unraid shows the update on the Docker tab. To stay on one release, change the tag to a version such as `0.2.3-cuda13`.
 
 ## Credits and licence
 
-[Strata](https://github.com/Niko1221/Strata) is by Niko1221 and the Strata contributors, under the MIT licence. The icon is Strata's own. This repository is MIT licensed; see [LICENSE](LICENSE).
+[Strata](https://github.com/Niko1221/Strata) and its image are by Niko1221 and the Strata contributors, under the MIT licence. The icon is Strata's own. This repository is MIT licensed; see [LICENSE](LICENSE).
