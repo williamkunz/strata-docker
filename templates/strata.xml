@@ -10,7 +10,9 @@
   <Support>https://github.com/williamkunz/strata-docker/issues</Support>
   <Project>https://github.com/Niko1221/Strata</Project>
   <ReadMe>https://raw.githubusercontent.com/williamkunz/strata-docker/main/README.md</ReadMe>
-  <Overview>Strata runs the Qwen3.8-Flash-Next mixture-of-experts model on an NVIDIA GPU plus system RAM, and serves an OpenAI- and Anthropic-compatible API, a chat page and a live monitor. This template runs Strata's official image.
+  <Overview>ATTENTION, if your Strata container's Repository is ghcr.io/williamkunz/strata: this template now uses Strata's official image (ghcr.io/niko1221/strata:latest-cuda13). I no longer build or update my own image, and an existing install stays on it. Either reinstall Strata from the Apps tab with the same Data path (recommended), or edit the container: set Repository to ghcr.io/niko1221/strata:latest-cuda13 and Extra Parameters to --runtime=nvidia --ulimit memlock=-1:-1 --shm-size=2g --stop-timeout 120, then Apply. Either way the downloaded model files are reused.
+
+Strata runs the Qwen3.8-Flash-Next mixture-of-experts model on an NVIDIA GPU plus system RAM, and serves an OpenAI- and Anthropic-compatible API, a chat page and a live monitor. This template runs Strata's official image.
 
 Requirements: the Nvidia Driver plugin on driver 580 or newer and an RTX 20/30/40/50 card. For a GTX 10, P100 or V100, or a driver from 575 to 579, change the Repository tag to latest-cuda12. You also need 32 GB of RAM or more (more RAM allows a larger, better model) and room for the model on an SSD pool.
 
