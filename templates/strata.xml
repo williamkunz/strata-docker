@@ -42,7 +42,7 @@ Template and Unraid problems: the Support link. Strata itself: the Project link.
 
   <Config Name="Model" Target="MODEL" Default="" Mode="" Description="Empty: Strata picks the model it recommends for this server and says so in the log. Or a size such as IQ2_XS, IQ3_XXS, IQ3_S or Q2_0; see docs/MODELS.md in the Strata repository for what each needs." Type="Variable" Display="always" Required="false" Mask="false"></Config>
 
-  <Config Name="Model family" Target="FAMILY" Default="" Mode="" Description="Empty for the usual one. qwen, swift (thinks shorter) or coder, when the size exists in several families." Type="Variable" Display="always" Required="false" Mask="false"></Config>
+  <Config Name="Model family" Target="FAMILY" Default="" Mode="" Description="Empty: Strata's recommendation, which may differ by hardware. Or qwen, unsloth, gyro, coder or swift (thinks shorter), when a size exists in several families. qwen is the original ISTA-DASLab packs." Type="Variable" Display="always" Required="false" Mask="false"></Config>
 
   <Config Name="Context length" Target="CONTEXT" Default="32k|64k|128k|256k" Mode="" Description="How much text it remembers at once. Longer costs RAM." Type="Variable" Display="always" Required="true" Mask="false">32k</Config>
 
@@ -50,15 +50,21 @@ Template and Unraid problems: the Support link. Strata itself: the Project link.
 
   <Config Name="API key" Target="API_KEY" Default="" Mode="" Description="16 characters or more (openssl rand -hex 24 makes one). Empty: the first start makes one and keeps it in the Data folder." Type="Variable" Display="always" Required="false" Mask="true"></Config>
 
-  <Config Name="Tuning" Target="TUNE" Default="skip|quick|thorough" Mode="" Description="Measures the best engine settings for this server, once, and keeps them. quick takes up to about 20 minutes on the first start, thorough up to about 2 hours." Type="Variable" Display="advanced" Required="true" Mask="false">skip</Config>
+  <Config Name="Tuning" Target="TUNE" Default="skip|quick|thorough" Mode="" Description="Measures the best engine settings for this server, once, on the next start, and keeps them. thorough takes longer than quick; how long depends on the hardware." Type="Variable" Display="advanced" Required="true" Mask="false">skip</Config>
 
   <Config Name="Tune again" Target="RETUNE" Default="0|1" Mode="" Description="1 tunes again on the next start even if this preset is already tuned, for example after an update. Set it back to 0 afterwards." Type="Variable" Display="advanced" Required="true" Mask="false">0</Config>
+
+  <Config Name="Tune a small card" Target="TUNE_ALLOW_SMALL" Default="0|1" Mode="" Description="1 allows tuning on a card Strata considers too small to tune." Type="Variable" Display="advanced" Required="true" Mask="false">0</Config>
 
   <Config Name="Parallel requests" Target="PARALLEL" Default="" Mode="" Description="Requests answered at the same time, 1 to 8. Empty: fitted to the card." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
 
   <Config Name="KV cache type" Target="KV" Default="int8|q4_0|k8v4|fp16" Mode="" Description="Conversation memory format: int8 (default), q4_0 (half the memory), k8v4, fp16." Type="Variable" Display="advanced" Required="true" Mask="false">int8</Config>
 
   <Config Name="Existing model files" Target="MODEL_PATH" Default="" Mode="" Description="GGUF files you already have, as a path inside the container. Add a Path mapping for their folder (read-only is fine), e.g. /models, and enter that here; set Model too. Nothing is downloaded for the model itself." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+
+  <Config Name="Download despite old model files" Target="ALLOW_DOWNLOAD" Default="0|1" Mode="" Description="When model files from the older image are still in /data/models, the start stops instead of downloading the model again (tens of GB) and the log says where they are. Use them with Existing model files, or set 1 to download anyway." Type="Variable" Display="advanced" Required="true" Mask="false">0</Config>
+
+  <Config Name="GPU roles" Target="GPU_ROLES" Default="" Mode="" Description="Several cards: a role for each, e.g. 1=main,0=helper (main, helper or off; cards you do not name are off). Empty: the engine's choice. See docs/MULTI_GPU.md in the Strata repository." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
 
   <Config Name="Engine settings" Target="STRATA_SET" Default="" Mode="" Description="Advanced engine settings, space separated, like strata launch --set." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
 </Container>
