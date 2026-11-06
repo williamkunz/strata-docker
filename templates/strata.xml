@@ -38,11 +38,11 @@ Template and Unraid problems: the Support link. Strata itself: the Project link.
 
   <Config Name="Data" Target="/data" Default="/mnt/cache/appdata/strata" Mode="rw" Description="The model, the prepared pack, presets, tuning and the API key: tens of GB, the log names the size. Use a direct pool path (/mnt/cache/... or /mnt/POOLNAME/...), not /mnt/user: the engine reads the model files while it runs." Type="Path" Display="always" Required="true" Mask="false">/mnt/cache/appdata/strata</Config>
 
-  <Config Name="GPU" Target="NVIDIA_VISIBLE_DEVICES" Default="all" Mode="" Description="The cards the container sees: a UUID (GPU-xxxxxxxx-...) from the Nvidia Driver plugin page or nvidia-smi -L, several separated by commas, or all." Type="Variable" Display="always" Required="true" Mask="false">all</Config>
+  <Config Name="GPU" Target="NVIDIA_VISIBLE_DEVICES" Default="all" Mode="" Description="The cards the container sees: a UUID (GPU-xxxxxxxx-...) from the Nvidia Driver plugin page or nvidia-smi -L, several separated by commas, or all. With exactly two RTX 30 or two RTX 50 class cards, a supported Qwen3.8 file and a context up to 128k, Strata uses its all-cards split engine by itself." Type="Variable" Display="always" Required="true" Mask="false">all</Config>
 
-  <Config Name="Model" Target="MODEL" Default="" Mode="" Description="Empty: Strata picks the model it recommends for this server and says so in the log. Or a size such as IQ2_XS, IQ3_XXS, IQ3_S or Q2_0; see docs/MODELS.md in the Strata repository for what each needs." Type="Variable" Display="always" Required="false" Mask="false"></Config>
+  <Config Name="Model" Target="MODEL" Default="" Mode="" Description="Empty: Strata picks the model it recommends for this server and says so in the log. Or a size such as IQ2_XS, IQ3_XXS, IQ3_S or Q2_0. Unsloth's files, such as UD-IQ1_M, UD-IQ2_XS, UD-IQ3_XXS or UD-Q4_K_XL, need Model family unsloth; Gyro-S and Gyro-M need gyro. See docs/MODELS.md in the Strata repository for what each needs." Type="Variable" Display="always" Required="false" Mask="false"></Config>
 
-  <Config Name="Model family" Target="FAMILY" Default="" Mode="" Description="Empty: Strata's recommendation, which may differ by hardware. Or qwen, unsloth, gyro, coder or swift (thinks shorter), when a size exists in several families. qwen is the original ISTA-DASLab packs." Type="Variable" Display="always" Required="false" Mask="false"></Config>
+  <Config Name="Model family" Target="FAMILY" Default="" Mode="" Description="Empty: Strata's recommendation, which may differ by hardware. Or qwen, unsloth, gyro, coder, nvfp4 or swift (thinks shorter), when a size exists in several families. qwen is the original ISTA-DASLab packs." Type="Variable" Display="always" Required="false" Mask="false"></Config>
 
   <Config Name="Context length" Target="CONTEXT" Default="32k|64k|128k|256k" Mode="" Description="How much text it remembers at once. Longer costs RAM." Type="Variable" Display="always" Required="true" Mask="false">32k</Config>
 
@@ -54,9 +54,9 @@ Template and Unraid problems: the Support link. Strata itself: the Project link.
 
   <Config Name="Tune again" Target="RETUNE" Default="0|1" Mode="" Description="1 tunes again on the next start even if this preset is already tuned, for example after an update. Set it back to 0 afterwards." Type="Variable" Display="advanced" Required="true" Mask="false">0</Config>
 
-  <Config Name="Tune a small card" Target="TUNE_ALLOW_SMALL" Default="0|1" Mode="" Description="1 allows tuning on a card Strata considers too small to tune." Type="Variable" Display="advanced" Required="true" Mask="false">0</Config>
+  <Config Name="Allow tuning to change answers" Target="TUNE_ALLOW_SMALL" Default="0|1" Mode="" Description="1 lets the tuner also try settings that can change answers very slightly. 0 keeps only settings that leave answers the same." Type="Variable" Display="advanced" Required="true" Mask="false">0</Config>
 
-  <Config Name="Parallel requests" Target="PARALLEL" Default="" Mode="" Description="Requests answered at the same time, 1 to 8. Empty: fitted to the card." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Parallel requests" Target="PARALLEL" Default="" Mode="" Description="Requests answered at the same time, 1 to 8. Empty: fitted to the card. With 2 or more, Strata uses the MTP drafter, because its default DFlash2 drafter answers one request at a time." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
 
   <Config Name="KV cache type" Target="KV" Default="int8|q4_0|k8v4|fp16" Mode="" Description="Conversation memory format: int8 (default), q4_0 (half the memory), k8v4, fp16." Type="Variable" Display="advanced" Required="true" Mask="false">int8</Config>
 
