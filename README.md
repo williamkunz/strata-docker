@@ -1,6 +1,6 @@
 # Strata for Unraid
 
-An Unraid Community Applications template for [Strata](https://github.com/Niko1221/Strata), which runs the Qwen3.8-Flash-Next mixture-of-experts model on an NVIDIA GPU plus system RAM. It serves an OpenAI- and Anthropic-compatible API, a chat page and a live monitor.
+An Unraid Community Applications template for [Strata](https://github.com/Niko1221/Strata), which runs large mixture-of-experts models on an NVIDIA GPU plus system RAM: Qwen3.8-Flash-Next and its variants, the smaller Qwen3.6-35B-A3B, and DeepSeek-V4.1-Flash. It serves an OpenAI- and Anthropic-compatible API, a chat page and a live monitor.
 
 The template runs Strata's official image, `ghcr.io/niko1221/strata:latest-cuda13`. Report template or Unraid problems in this repository's [issues](https://github.com/williamkunz/strata-docker/issues), and problems with Strata itself to the [Strata project](https://github.com/Niko1221/Strata/issues).
 
@@ -11,6 +11,18 @@ Search for **Strata** in the Apps tab. Before installing you need:
 - the **Nvidia Driver plugin** on driver 580 or newer, and an RTX 20/30/40/50 card. For a GTX 10, P100 or V100, or a driver from 575 to 579, change the Repository tag to `latest-cuda12`.
 - 32 GB of RAM or more; more RAM allows a larger, better model ([Strata's model guide](https://github.com/Niko1221/Strata/blob/main/docs/MODELS.md))
 - room for the model on an SSD pool, mapped as a direct pool path (`/mnt/cache/...`), not `/mnt/user`
+
+### DeepSeek-V4.1-Flash
+
+Set **Model family** to `deepseek41` and **Model** to `ist-das-1.75bpw`, `ist-das-2.00bpw`, `ist-das-2.25bpw` or `ista-das-coder`. It needs:
+
+- the `latest-cuda13` tag (DeepSeek's engine has no CUDA 12 build) and an RTX 30/40/50 card with 12 GB or more
+- 46 GB of RAM or more; 64 GB is the size Strata tested
+- 191 to 274 GB for the Data folder, on an NVMe pool: the model reads its lookup table from the disk for every word
+
+DeepSeek uses its own engine, which the first start downloads into the Data folder. It is checked at `8k` context and offers up to `1m`. See Strata's [DeepSeek guide](https://github.com/Niko1221/Strata/blob/main/docs/DEEPSEEK41.md).
+
+### First start
 
 The first start downloads the model and prepares it. Later starts go straight to serving. The template's Overview explains each setting, and Strata's [Docker guide](https://github.com/Niko1221/Strata/blob/main/docs/DOCKER.md) covers them in full.
 
