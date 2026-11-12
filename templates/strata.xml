@@ -15,7 +15,32 @@
 
 Requirements: the Nvidia Driver plugin on driver 580 or newer and an RTX 20/30/40/50 card. For a GTX 10, P100 or V100, or a driver from 575 to 579, change the Repository tag to latest-cuda12. You also need 32 GB of RAM or more (more RAM allows a larger, better model) and room for the model on an SSD pool.
 
-DeepSeek-V4.1-Flash: set Model family to deepseek41 and Model to ist-das-1.75bpw, ist-das-2.00bpw, ist-das-2.25bpw or ista-das-coder. It needs the latest-cuda13 tag, an RTX 30/40/50 card with 12 GB or more, 46 GB of RAM or more (64 GB is the tested size) and 191 to 274 GB on an NVMe pool. Its own engine is downloaded into the Data folder on the first start. It is checked at 8k context and offers up to 1m.
+Choosing a model: leave Model and Model family empty and Strata picks one for this server, and the log says which and why. To choose yourself, set both. The model names are compression levels: the number is roughly the bits kept per weight, so a smaller number means a smaller download and less RAM, at some cost in quality. RAM below is the server's total RAM.
+
+Qwen3.8-Flash-Next, the main model, for chat, code and tools (Model family qwen):
+- Q2_0: the fastest, good quality. 66 GB download, 48 GB RAM.
+- IQ2_XS: a little better, nearly as fast. 68 GB, 48 GB RAM.
+- IQ3_XXS: great quality, slower. 76 GB, 60 GB RAM.
+- IQ3_S: the best quality, matches the full model; the slowest. 84 GB, 64 GB RAM.
+
+Other versions of Qwen3.8 (set the family shown):
+- swift, with the same four sizes as qwen: a fine-tune by UkisAI that thinks for less time before it answers.
+- coder, Model IQ1_M: for code only, with half the model removed. 58 GB, 32 GB RAM.
+- gyro, Model Gyro-S: the least memory (about 28 GB of RAM and graphics memory together), lower quality. 59 GB. Gyro-M: about IQ3_XXS quality in 35 GB, 16-21% slower than Q2_0. 92 GB.
+- unsloth, more bits for servers with a lot of RAM (the RAM figure keeps the whole model in memory): UD-IQ4_XS 94 GB, 72 GB RAM; UD-Q4_K_XL 111 GB, 88 GB RAM; UD-Q5_K_XL 158 GB, 108 GB RAM; UD-Q6_K_XL 169 GB, 118 GB RAM; Q8_0 188 GB, 136 GB RAM (the reference quality).
+- nvfp4: NVIDIA's 4-bit format, fastest on RTX 50 cards. NVFP4 (the best of the three), NVFP4-NVIDIA or NVFP4-QAD. 102-128 GB, 80 GB RAM.
+
+Qwen3.6-35B-A3B, a smaller model for servers with less RAM (Model family qwen36):
+- UD-Q4_K_XL: 23 GB download, 32 GB RAM.
+- UD-Q6_K_XL: closer to the full model. 33 GB, 44 GB RAM.
+- Q8_0: the closest to the full model. 38 GB, 52 GB RAM.
+
+DeepSeek-V4.1-Flash, the largest model (Model family deepseek41). Each download includes a 111 GB lookup table and an 8 GB helper model:
+- ist-das-2.25bpw: the best quality, the best for code and agents. 274 GB.
+- ist-das-2.00bpw: the middle choice. 257 GB.
+- ist-das-1.75bpw: the smallest, noticeably weaker at writing prose. 239 GB.
+- ista-das-coder: for code only, with half the model removed. 191 GB.
+DeepSeek needs the latest-cuda13 tag, an RTX 30/40/50 card with 12 GB or more, 46 GB of RAM or more (64 GB is the tested size) and an NVMe pool. Expect about 5-10 tokens per second on a 12 GB card. Its own engine is downloaded into the Data folder on the first start. It is checked at 8k context and offers up to 1m.
 
 First start: downloads the model into the Data folder and prepares it, which takes a while; watch the log. A stopped download resumes where it left off. Later starts go straight to serving.
 
@@ -41,9 +66,9 @@ Template and Unraid problems: the Support link. Strata itself: the Project link.
 
   <Config Name="GPU" Target="NVIDIA_VISIBLE_DEVICES" Default="all" Mode="" Description="The cards the container sees: a UUID (GPU-xxxxxxxx-...) from the Nvidia Driver plugin page or nvidia-smi -L, several separated by commas, or all. With exactly two RTX 30 or two RTX 50 class cards, a supported Qwen3.8 file and a context up to 128k, Strata uses its all-cards split engine by itself." Type="Variable" Display="always" Required="true" Mask="false">all</Config>
 
-  <Config Name="Model" Target="MODEL" Default="" Mode="" Description="Empty: Strata picks the model it recommends for this server and says so in the log. Qwen3.8 (family qwen): Q2_0, IQ2_XS, IQ3_XXS or IQ3_S. Unsloth (unsloth): UD-IQ4_XS, UD-Q4_K_XL, UD-Q5_K_XL, UD-Q6_K_XL, Q8_0 and smaller UD-IQ1_M to UD-IQ3_XXS. Gyro (gyro): Gyro-S, Gyro-M. NVFP4 (nvfp4): NVFP4, NVFP4-NVIDIA, NVFP4-QAD. Qwen3.6-35B-A3B (qwen36): UD-Q4_K_XL, UD-Q6_K_XL, Q8_0. DeepSeek (deepseek41): ist-das-1.75bpw, ist-das-2.00bpw, ist-das-2.25bpw, ista-das-coder. See docs/MODELS.md in the Strata repository for what each needs." Type="Variable" Display="always" Required="false" Mask="false"></Config>
+  <Config Name="Model" Target="MODEL" Default="" Mode="" Description="Empty: Strata picks for this server, and the log says which and why. Otherwise set Model family too. A smaller number in the name means a smaller download and less RAM, at some cost in quality. Qwen3.8 (qwen): Q2_0 is the fastest (48 GB RAM), then IQ2_XS, IQ3_XXS, and IQ3_S the best (64 GB RAM). Qwen3.6 (qwen36), a smaller model: UD-Q4_K_XL for 32 GB of RAM, UD-Q6_K_XL, Q8_0. DeepSeek (deepseek41), the largest: ist-das-2.25bpw the best, ist-das-2.00bpw, ist-das-1.75bpw the smallest, ista-das-coder for code. The Overview lists every option with its download size and RAM." Type="Variable" Display="always" Required="false" Mask="false"></Config>
 
-  <Config Name="Model family" Target="FAMILY" Default="" Mode="" Description="Empty: Strata's recommendation, which may differ by hardware. Qwen3.8-Flash-Next: qwen (the original ISTA-DASLab packs), unsloth, gyro, coder, nvfp4 or swift (thinks shorter). qwen36: Qwen3.6-35B-A3B. deepseek41: DeepSeek-V4.1-Flash (needs the cuda13 tag)." Type="Variable" Display="always" Required="false" Mask="false"></Config>
+  <Config Name="Model family" Target="FAMILY" Default="" Mode="" Description="Which model, or which version of it. Empty: Strata's pick. qwen: Qwen3.8-Flash-Next, the main model. swift: Qwen3.8 tuned to think for less time. coder: Qwen3.8 for code only, in less RAM. gyro: Qwen3.8 in the least memory, slower. unsloth: Qwen3.8 at 4 to 8 bits, for servers with a lot of RAM. nvfp4: Qwen3.8 in NVIDIA's 4-bit format, fastest on RTX 50. qwen36: Qwen3.6-35B-A3B, a smaller model for 32-52 GB of RAM. deepseek41: DeepSeek-V4.1-Flash, the largest (cuda13 tag, 191-274 GB of disk)." Type="Variable" Display="always" Required="false" Mask="false"></Config>
 
   <Config Name="Context length" Target="CONTEXT" Default="8k|32k|64k|128k|256k|512k|1m" Mode="" Description="How much text it remembers at once. Longer costs memory. Qwen3.8 goes up to 256k. DeepSeek is checked at 8k and offers up to 1m, but nothing past 256k has been tested and a very long prompt is read slowly." Type="Variable" Display="always" Required="true" Mask="false">32k</Config>
 
